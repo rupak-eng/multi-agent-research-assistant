@@ -185,7 +185,11 @@ class WriterAgent:
         self.llm = llm
 
     def write(self, req: WriteRequest) -> tuple[ResearchReport, LLMResponse]:
-        findings_json = "[" + ",".join(f.model_dump_json() for f in req.findings) + "]"
+        # Same TPM-budget truncation as the researcher: context copy only.
+        findings_json = "[" + ",".join(
+            f.model_copy(update={"snippet": f.snippet[:400]}).model_dump_json()
+            for f in req.findings
+        ) + "]"
         user = f"QUESTION: {req.question}\nFINDINGS_JSON: {findings_json}"
         if req.validation_feedback:
             user += f"\nPREVIOUS_DRAFT_FEEDBACK: {req.validation_feedback}"
