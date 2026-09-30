@@ -8,12 +8,9 @@ venv/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
-bench/results/*.json
-!bench/results/.gitkeep
-eval/*.jsonl
-!eval/.gitkeep
-demo/*.json
-demo/*.md
-!demo/.gitkeep
+# Benchmark raw results ARE committed (traceability for README numbers).
+# Only ignore local scratch runs, not the canonical result files.
+bench/results/scratch_*.json
+eval/scratch_*.jsonl
 *.log
 .DS_Store
