@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Ruff
+        run: python -m ruff check app/ tests/ bench/ demo/ eval/
+
+      - name: Compile check
+        run: python -m compileall -q app tests bench
+
+      - name: Unit + integration tests (stub providers)
+        run: python -m pytest tests/ -q
+        env:
+          # Force stub providers in CI; no real credentials exist here.
+          LLM_PROVIDER: stub
+          SEARCH_PROVIDER: stub
+
+      - name: Deterministic benchmark (smoke, 2 topics)
+        run: python bench/run_bench.py --provider stub --topics 2
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t research-assistant:ci .
+
+      - name: Validate compose config
+        run: docker compose config --quiet
