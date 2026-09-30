@@ -118,14 +118,14 @@ class RedisRunRegistry(RunRegistry):
                 snap = json.loads(raw.decode() if isinstance(raw, bytes) else raw)
                 if snap.get("status") == "RUNNING":
                     out.append(snap["run_id"])
-            except Exception:
+            except Exception:  # noqa: BLE001,S112 - corrupt snapshot: skip it
                 continue
         return out
 
     def ping(self) -> bool:
         try:
             return bool(self.r.ping())
-        except Exception:
+        except Exception:  # noqa: BLE001 - ping failure means unreachable
             return False
 
 
@@ -149,7 +149,7 @@ class FileRunRegistry(RunRegistry):
     def _read_queue(self) -> list[str]:
         try:
             return json.loads(self._queue_file.read_text())
-        except Exception:
+        except Exception:  # noqa: BLE001 - corrupt queue file: start empty
             return []
 
     def create_run(self, run_id: str, question: str, snapshot_json: str) -> None:
@@ -203,7 +203,7 @@ class FileRunRegistry(RunRegistry):
                 snap = json.loads(p.read_text())
                 if snap.get("status") == "RUNNING":
                     out.append(snap["run_id"])
-            except Exception:
+            except Exception:  # noqa: BLE001,S112 - corrupt snapshot: skip it
                 continue
         return out
 
