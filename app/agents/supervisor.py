@@ -12,18 +12,18 @@ from dataclasses import dataclass, field
 
 from ..state.schemas import (
     ErrorCode,
+    ResearchPlan,
     ResearcherResult,
     ResearcherStatus,
-    ResearchPlan,
     RoutingDecision,
     RoutingTarget,
     RunBudgets,
-    RunError,
     SubQuestion,
     SubQuestionStatus,
     TokenUsage,
     utcnow,
 )
+from ..state.schemas import RunError
 
 
 @dataclass
@@ -58,35 +58,26 @@ class SupervisorAgent:
                 reason=(f"wall-clock budget exceeded "
                         f"({view.elapsed_sec:.0f}s >= {view.budgets.wall_clock_sec}s)"))
 
-        # --- absorb ALL researcher results into sub-question state ---
-        # (not just the latest: after a resume/merge the plan may have been
-        # re-run and reset to PENDING while results are already present).
-        for res in view.researcher_results:
-            sq = self._find(view.plan, res.subquestion_id)
-            if sq is None:
-                continue
-            if res.status == ResearcherStatus.ANSWERED:
-                sq.status = SubQuestionStatus.ANSWERED
-            elif res.status == ResearcherStatus.INSUFFICIENT:
-                # handled below for the latest insufficient result only
-                pass
-            else:  # FAILED
-                sq.status = SubQuestionStatus.FAILED
-        # retry logic acts on the latest insufficient result, if any
+        # --- absorb the latest researcher result into sub-question state ---
         if view.researcher_results:
             last = view.researcher_results[-1]
-            if last.status == ResearcherStatus.INSUFFICIENT:
-                sq = self._find(view.plan, last.subquestion_id)
-                if sq is not None and view.revision_count < view.budgets.max_revisions:
-                    sq.status = SubQuestionStatus.INSUFFICIENT
-                    sq.attempts = last_attempts_plus_one(view, last)
-                    return RoutingDecision(
-                        next=RoutingTarget.RESEARCH,
-                        reason=(f"{sq.id} insufficient; revision "
-                                f"{view.revision_count + 1}/{view.budgets.max_revisions}"),
-                        subquestion_id=sq.id,
-                    )
-                elif sq is not None:
+            sq = self._find(view.plan, last.subquestion_id)
+            if sq is not None:
+                if last.status == ResearcherStatus.ANSWERED:
+                    sq.status = SubQuestionStatus.ANSWERED
+                elif last.status == ResearcherStatus.INSUFFICIENT:
+                    if view.revision_count < view.budgets.max_revisions:
+                        # one more attempt with a refined query
+                        sq.status = SubQuestionStatus.INSUFFICIENT
+                        sq.attempts = last_attempts_plus_one(view, last)
+                        return RoutingDecision(
+                            next=RoutingTarget.RESEARCH,
+                            reason=(f"{sq.id} insufficient; revision "
+                                    f"{view.revision_count + 1}/{view.budgets.max_revisions}"),
+                            subquestion_id=sq.id,
+                        )
+                    sq.status = SubQuestionStatus.FAILED
+                else:  # FAILED
                     sq.status = SubQuestionStatus.FAILED
 
         pending = [s for s in view.plan.subquestions

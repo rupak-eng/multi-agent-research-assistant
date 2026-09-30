@@ -28,12 +28,12 @@ def harness():
     settings = Settings(llm_provider="stub", search_provider="stub")
     registry = FileRunRegistry(tmp + "/reg")
     ckpt = FileCheckpointer(tmp + "/ckpt")
-    graph, _deps, _ = build_worker_graph(settings, registry, checkpointer=ckpt)
+    graph, deps, _ = build_worker_graph(settings, registry, checkpointer=ckpt)
     return settings, registry, graph
 
 
 def _run(harness, question, budgets):
-    _settings, registry, graph = harness
+    settings, registry, graph = harness
     run_id = "run_integ1"
     initial = build_initial_state(run_id, question, budgets)
     registry.create_run(run_id, question, json.dumps(initial))
@@ -41,7 +41,7 @@ def _run(harness, question, budgets):
 
 
 def test_full_run_completes_with_cited_report(harness):
-    _run_id, final = _run(harness, "vector databases for RAG",
+    run_id, final = _run(harness, "vector databases for RAG",
                          RunBudgets(max_subquestions=2, max_searches=6))
     assert final["status"] == RunStatus.COMPLETED.value
     assert final["error"] is None

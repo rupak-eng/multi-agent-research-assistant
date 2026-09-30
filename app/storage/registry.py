@@ -71,10 +71,7 @@ class RedisRunRegistry(RunRegistry):
     def claim(self, timeout: int = 5) -> str | None:
         # BRPOPLPUSH: atomically move to processing so a crashed worker's
         # items can be reclaimed on restart.
-        try:
-            v = self.r.brpoplpush(self.QUEUE, self.PROCESSING, timeout=timeout)
-        except Exception:  # noqa: BLE001 - socket timeout => no work available
-            return None
+        v = self.r.brpoplpush(self.QUEUE, self.PROCESSING, timeout=timeout)
         if v is None:
             return None
         return v.decode() if isinstance(v, bytes) else v
@@ -83,14 +80,13 @@ class RedisRunRegistry(RunRegistry):
         self.r.lrem(self.PROCESSING, 1, run_id)
 
     def reclaim_orphans(self) -> list[str]:
-        """Remove items stuck in processing (crashed worker) and return their
-        ids. The caller drives them directly; they are NOT re-queued, so a
-        restarted worker can never pick up the same run twice."""
+        """Move items stuck in processing (crashed worker) back to the queue."""
         orphans = self.r.lrange(self.PROCESSING, 0, -1)
         out = []
         for o in orphans:
             rid = o.decode() if isinstance(o, bytes) else o
             self.r.lrem(self.PROCESSING, 1, rid)
+            self.r.lpush(self.QUEUE, rid)
             out.append(rid)
         return out
 
@@ -121,14 +117,14 @@ class RedisRunRegistry(RunRegistry):
                 snap = json.loads(raw.decode() if isinstance(raw, bytes) else raw)
                 if snap.get("status") == "RUNNING":
                     out.append(snap["run_id"])
-            except Exception:  # noqa: BLE001,S112 - corrupt snapshot: skip it
+            except Exception:
                 continue
         return out
 
     def ping(self) -> bool:
         try:
             return bool(self.r.ping())
-        except Exception:  # noqa: BLE001 - ping failure means unreachable
+        except Exception:
             return False
 
 
@@ -152,7 +148,7 @@ class FileRunRegistry(RunRegistry):
     def _read_queue(self) -> list[str]:
         try:
             return json.loads(self._queue_file.read_text())
-        except Exception:  # noqa: BLE001 - corrupt queue file: start empty
+        except Exception:
             return []
 
     def create_run(self, run_id: str, question: str, snapshot_json: str) -> None:
@@ -206,7 +202,7 @@ class FileRunRegistry(RunRegistry):
                 snap = json.loads(p.read_text())
                 if snap.get("status") == "RUNNING":
                     out.append(snap["run_id"])
-            except Exception:  # noqa: BLE001,S112 - corrupt snapshot: skip it
+            except Exception:
                 continue
         return out
 

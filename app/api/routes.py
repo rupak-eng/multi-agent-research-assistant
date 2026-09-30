@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import JSONResponse
 
 from ..api.deps import QUEUE, get_redis_client, redis_ping, run_key, trace_key
 from ..config import Settings, get_settings
@@ -36,7 +35,7 @@ def _settings() -> Settings:
 @router.post("/research", response_model=ResearchCreateResponse,
              status_code=202)
 async def create_research(req: ResearchCreateRequest,
-                          settings: Settings = Depends(_settings)):  # noqa: B008 - FastAPI DI
+                          settings: Settings = Depends(_settings)):
     """Enqueue a research run. Returns immediately with a run_id."""
     client = get_redis_client(settings)
     if not await redis_ping(client):
@@ -58,7 +57,7 @@ async def create_research(req: ResearchCreateRequest,
 
 
 @router.get("/research/{run_id}", response_model=ResearchStatusResponse)
-async def get_research(run_id: str, settings: Settings = Depends(_settings)):  # noqa: B008 - FastAPI DI
+async def get_research(run_id: str, settings: Settings = Depends(_settings)):
     client = get_redis_client(settings)
     raw = await client.get(run_key(run_id))
     if raw is None:
@@ -67,7 +66,7 @@ async def get_research(run_id: str, settings: Settings = Depends(_settings)):  #
 
 
 @router.get("/research/{run_id}/trace", response_model=TraceResponse)
-async def get_trace(run_id: str, settings: Settings = Depends(_settings)):  # noqa: B008 - FastAPI DI
+async def get_trace(run_id: str, settings: Settings = Depends(_settings)):
     client = get_redis_client(settings)
     if await client.get(run_key(run_id)) is None:
         raise HTTPException(status_code=404, detail="unknown run_id")
@@ -86,10 +85,10 @@ async def health():
 
 
 @router.get("/ready")
-async def ready(settings: Settings = Depends(_settings)):  # noqa: B008 - FastAPI DI
+async def ready(settings: Settings = Depends(_settings)):
     client = get_redis_client(settings)
     ok = await redis_ping(client)
-    body = {"ready": bool(ok),
+    return {"ready": ok,
             "llm_provider": settings.llm_provider,
-            "search_provider": settings.search_provider}
-    return JSONResponse(status_code=200 if ok else 503, content=body)
+            "search_provider": settings.search_provider}, \
+        (200 if ok else 503)
