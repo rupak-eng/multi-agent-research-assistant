@@ -80,13 +80,14 @@ class RedisRunRegistry(RunRegistry):
         self.r.lrem(self.PROCESSING, 1, run_id)
 
     def reclaim_orphans(self) -> list[str]:
-        """Move items stuck in processing (crashed worker) back to the queue."""
+        """Remove items stuck in processing (crashed worker) and return their
+        ids. The caller drives them directly; they are NOT re-queued, so a
+        restarted worker can never pick up the same run twice."""
         orphans = self.r.lrange(self.PROCESSING, 0, -1)
         out = []
         for o in orphans:
             rid = o.decode() if isinstance(o, bytes) else o
             self.r.lrem(self.PROCESSING, 1, rid)
-            self.r.lpush(self.QUEUE, rid)
             out.append(rid)
         return out
 

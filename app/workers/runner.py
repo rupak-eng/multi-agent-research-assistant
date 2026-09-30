@@ -68,17 +68,17 @@ def main() -> None:
     backstop = settings.wall_clock_timeout_sec + 300
 
     # --- crash recovery: resume runs orphaned by a dead worker ------------
+    # reclaim_orphans removes them from `processing` (no re-queue); we drive
+    # each directly from its LangGraph checkpoint, so completed nodes are not
+    # re-executed and the run can never be picked up twice.
     orphans = registry.reclaim_orphans()
     for run_id in orphans:
         log.info("resuming orphaned run", run_id=run_id)
         try:
             _drive_guarded(graph, registry, run_id, None, backstop)
         except Exception:
-            log.error("orphan resume failed", run_id=run_id,
-                      error=traceback.format_exc())
+            log.error("run failed", run_id=run_id, error=traceback.format_exc())
             _mark_failed(registry, run_id, "resume after worker crash failed")
-        finally:
-            registry.ack(run_id)
     # snapshots stuck in RUNNING that never made it to the processing queue
     for run_id in registry.running_run_ids():
         log.info("resuming stuck RUNNING run", run_id=run_id)
@@ -99,12 +99,18 @@ def main() -> None:
                 log.error("no snapshot for claimed run", run_id=run_id)
                 continue
             snap = json.loads(raw)
-            if snap.get("status") == RunStatus.RUNNING.value:
+            status = snap.get("status")
+            if status == RunStatus.RUNNING.value:
+                # worker died mid-run (or orphan path): resume from checkpoint
                 _drive_guarded(graph, registry, run_id, None, backstop)
-            else:
+            elif status == RunStatus.QUEUED.value:
                 snap["status"] = RunStatus.RUNNING.value
                 registry.save_snapshot(run_id, json.dumps(snap))
                 _drive_guarded(graph, registry, run_id, snap, backstop)
+            else:
+                # terminal (COMPLETED/FAILED): never re-drive; just ack it.
+                log.warning("claimed terminal run, skipping re-drive",
+                            run_id=run_id, status=status)
             log.info("run finished", run_id=run_id,
                      status=json.loads(registry.get_snapshot(run_id) or "{}").get("status"))
         except Exception:
