@@ -25,7 +25,9 @@ graph TD
 | Benchmark | Runs | p50 latency | p95 latency | Citation pass | Cost |
 |---|---|---|---|---|---|
 | Deterministic/Stub | 5/5 | 0.06 s | 0.08 s | 100% | $0.00 |
-| Real: Groq gpt-oss-20b + Tavily | _in progress_ | _TBD_ | _TBD_ | _TBD_ | _TBD_ |
+| Real: Groq gpt-oss-20b + Tavily | 0/5 | blocked | blocked | blocked | — |
+
+> **Real-provider benchmark status (2026-09-30):** Blocked by Groq TPM rate limits (8000/min on the shared dev-tier key; another project's benchmark was consuming quota concurrently). Attempts recorded provider 429s honestly in `bench_real_*.json`. The harness (`bench/run_bench.py --provider real`), retry/backoff, and inter-call pacing are implemented and ready; re-run when quota is available.
 
 **Durability:** `kill -9` mid-run → fresh worker resumes from Redis checkpoint in 8.5 s, zero duplicated side-effects, run completes. (`tests/integration/test_kill_resume.py`)
 
@@ -70,13 +72,29 @@ LLM research assistants fail in production for boring reasons: duplicated tool c
 
 `bench/run_bench.py` runs fixed topics end-to-end and writes raw JSON to `bench/results/`.
 
-- **Deterministic/Stub** (`bench_stub_*.json`): 5 topics, 5/5 completed, p50 0.06 s, p95 0.08 s, 6.0 searches/run, citation pass 100%, $0.00.
-- **Real Provider: Groq openai/gpt-oss-20b + Tavily** (`bench_real_*.json`): _TBD — see raw file._
+- **Deterministic/Stub** (`bench_stub_20260930T065500Z.json`): 5 topics, 5/5 completed, p50 0.06 s, p95 0.08 s, 6.0 searches/run, citation pass 100%, $0.00.
+- **Real Provider: Groq openai/gpt-oss-20b + Tavily**: blocked on 2026-09-30 by TPM rate limits (see above). Failed attempts with honest 429 errors are in `bench_real_*.json`.
 - Cost math uses published Groq pricing ($0.075/1M input, $0.30/1M output tokens); Tavily is usage-credit based and reported as searches/run.
 
 ## Results
 
-_TBD after real benchmark completes — all numbers traceable to `bench/results/`._
+**Deterministic/Stub** (`bench/results/bench_stub_20260930T065500Z.json`, 2026-09-30):
+
+| Metric | Value |
+|---|---|
+| Topics | 5 fixed |
+| Completed | 5/5 (100%) |
+| p50 latency | 0.06 s |
+| p95 latency | 0.08 s |
+| Mean latency | 0.07 s |
+| Mean input tokens/run | 2,649 |
+| Mean output tokens/run | 2,239 |
+| Mean searches/run | 6.0 |
+| Citation pass rate | 100% |
+| Routing decisions | research: 15, write: 5 |
+| Estimated cost | $0.00 (stub) |
+
+_All numbers above are measured from committed raw files in `bench/results/`. No synthetic benchmarks._
 
 ## Failure cases (tested)
 
