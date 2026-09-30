@@ -1,0 +1,134 @@
+{
+  "label": "Deterministic/Stub",
+  "provider": {
+    "llm": "stub",
+    "llm_model": "stub-llm-v1",
+    "search": "stub"
+  },
+  "dataset": {
+    "topics": [
+      "What are vector databases and how do they power RAG pipelines?",
+      "How does LangGraph handle state and checkpointing for AI agents?",
+      "What are the trade-offs of hybrid search versus pure vector search?",
+      "How do AI agents use tools safely in production systems?",
+      "What is retrieval-augmented generation and how is it evaluated?"
+    ],
+    "size": 5
+  },
+  "budgets": {
+    "max_tokens": 60000,
+    "max_searches": 9,
+    "max_subquestions": 3,
+    "max_revisions": 2,
+    "wall_clock_sec": 600
+  },
+  "started_utc": "2026-09-30T06:55:00.904211+00:00",
+  "finished_utc": "2026-09-30T06:55:01.251989+00:00",
+  "runs": [
+    {
+      "run_id": "run_c8c9d3d44272",
+      "topic": "What are vector databases and how do they power RAG pipelines?",
+      "status": "COMPLETED",
+      "latency_sec": 0.06,
+      "tokens_in": 2841,
+      "tokens_out": 2430,
+      "searches": 6,
+      "findings": 9,
+      "routing_decisions": {
+        "research": 3,
+        "write": 1
+      },
+      "trace_steps": 10,
+      "citation_pass": true,
+      "error": null
+    },
+    {
+      "run_id": "run_c0d5fdb4a811",
+      "topic": "How does LangGraph handle state and checkpointing for AI agents?",
+      "status": "COMPLETED",
+      "latency_sec": 0.06,
+      "tokens_in": 2743,
+      "tokens_out": 2296,
+      "searches": 6,
+      "findings": 9,
+      "routing_decisions": {
+        "research": 3,
+        "write": 1
+      },
+      "trace_steps": 10,
+      "citation_pass": true,
+      "error": null
+    },
+    {
+      "run_id": "run_39e6027a2a33",
+      "topic": "What are the trade-offs of hybrid search versus pure vector search?",
+      "status": "COMPLETED",
+      "latency_sec": 0.08,
+      "tokens_in": 2849,
+      "tokens_out": 2435,
+      "searches": 6,
+      "findings": 9,
+      "routing_decisions": {
+        "research": 3,
+        "write": 1
+      },
+      "trace_steps": 10,
+      "citation_pass": true,
+      "error": null
+    },
+    {
+      "run_id": "run_7abda5cf142c",
+      "topic": "How do AI agents use tools safely in production systems?",
+      "status": "COMPLETED",
+      "latency_sec": 0.06,
+      "tokens_in": 2402,
+      "tokens_out": 2013,
+      "searches": 6,
+      "findings": 8,
+      "routing_decisions": {
+        "research": 3,
+        "write": 1
+      },
+      "trace_steps": 10,
+      "citation_pass": true,
+      "error": null
+    },
+    {
+      "run_id": "run_72b43b4b8f6d",
+      "topic": "What is retrieval-augmented generation and how is it evaluated?",
+      "status": "COMPLETED",
+      "latency_sec": 0.08,
+      "tokens_in": 2411,
+      "tokens_out": 2020,
+      "searches": 6,
+      "findings": 8,
+      "routing_decisions": {
+        "research": 3,
+        "write": 1
+      },
+      "trace_steps": 10,
+      "citation_pass": true,
+      "error": null
+    }
+  ],
+  "summary": {
+    "completed": 5,
+    "failed": 0,
+    "latency_sec_p50": 0.06,
+    "latency_sec_p95": 0.08,
+    "latency_sec_mean": 0.07,
+    "tokens_in_total": 13246,
+    "tokens_out_total": 11194,
+    "tokens_in_mean": 2649.2,
+    "tokens_out_mean": 2238.8,
+    "searches_total": 30,
+    "searches_per_run_mean": 6.0,
+    "routing_decisions": {
+      "research": 15,
+      "write": 5
+    },
+    "citation_pass_rate": 1.0,
+    "estimated_cost_usd": 0.0,
+    "cost_note": "stub providers: no real cost"
+  }
+}

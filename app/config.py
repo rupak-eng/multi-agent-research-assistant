@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     # custom.groq Secure Vault connector — never hardcoded, never in files.
     groq_api_key: str = Field(default="")
     groq_model: str = Field(default="openai/gpt-oss-20b")
+    groq_min_interval_sec: float = Field(default=0.0, ge=0.0)  # pacing for TPM limits
 
     search_provider: str = Field(default="tavily")
     tavily_api_key: str = Field(default="")
