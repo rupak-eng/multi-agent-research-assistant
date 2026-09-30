@@ -63,7 +63,7 @@ def _drive_guarded(graph, registry: RedisRunRegistry, run_id: str,
 
 def main() -> None:
     settings = get_settings()
-    graph, deps, registry = build_worker_graph(settings)
+    graph, _deps, registry = build_worker_graph(settings)
     assert isinstance(registry, RedisRunRegistry)
     backstop = settings.wall_clock_timeout_sec + 300
 
@@ -76,7 +76,7 @@ def main() -> None:
         log.info("resuming orphaned run", run_id=run_id)
         try:
             _drive_guarded(graph, registry, run_id, None, backstop)
-        except Exception:
+        except Exception:  # noqa: BLE001 - worker must survive any run failure
             log.error("run failed", run_id=run_id, error=traceback.format_exc())
             _mark_failed(registry, run_id, "resume after worker crash failed")
     # snapshots stuck in RUNNING that never made it to the processing queue
@@ -84,7 +84,7 @@ def main() -> None:
         log.info("resuming stuck RUNNING run", run_id=run_id)
         try:
             _drive_guarded(graph, registry, run_id, None, backstop)
-        except Exception:
+        except Exception:  # noqa: BLE001 - worker must survive any run failure
             _mark_failed(registry, run_id, "resume of stuck run failed")
 
     log.info("worker started, waiting for runs")
@@ -113,7 +113,7 @@ def main() -> None:
                             run_id=run_id, status=status)
             log.info("run finished", run_id=run_id,
                      status=json.loads(registry.get_snapshot(run_id) or "{}").get("status"))
-        except Exception:
+        except Exception:  # noqa: BLE001 - worker must survive any run failure
             log.error("run failed", run_id=run_id, error=traceback.format_exc())
             _mark_failed(registry, run_id, "worker exception")
         finally:

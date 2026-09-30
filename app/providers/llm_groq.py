@@ -23,7 +23,7 @@ from pydantic import BaseModel, ValidationError
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from .base import LLMProvider, LLMRequest, LLMResponse
-from .credentials import CredentialMissingError, require_credential
+from .credentials import require_credential
 from .tokens import TokenCounter
 
 BROWSER_UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
@@ -109,8 +109,6 @@ class GroqLLMProvider(LLMProvider):
         if req.response_model is not None:
             self._validate_json(text, req.response_model)
         usage = data.get("usage") or {}
-        reasoning = (usage.get("completion_tokens_details") or {}).get(
-            "reasoning_tokens", 0)
         tokens_in = usage.get("prompt_tokens") or self.counter.count_messages(
             req.system, req.user)
         tokens_out = (usage.get("completion_tokens")

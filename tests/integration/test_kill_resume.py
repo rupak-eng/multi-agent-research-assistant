@@ -11,14 +11,13 @@ import json
 import os
 import signal
 import subprocess
-import sys
 import time
 
 import pytest
 import redis
 
-from app.state.schemas import RunBudgets, RunStatus
 from app.services.orchestrator import build_initial_state
+from app.state.schemas import RunBudgets, RunStatus
 from app.storage.registry import RedisRunRegistry, new_run_id
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -32,7 +31,7 @@ def _redis_or_skip():
                                  decode_responses=False, socket_timeout=2)
         r.ping()
         return r
-    except Exception:
+    except Exception:  # noqa: BLE001 - any redis failure means skip
         pytest.skip("no Redis on localhost:6379 — chaos test needs real Redis")
 
 
@@ -93,10 +92,13 @@ def test_kill9_midrun_resumes_and_completes():
             [PY, "-m", "app.workers.runner"], cwd=REPO, env=env,
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         try:
-            final = _wait_for(
-                lambda: (lambda s: s if s and s["status"] in (
-                    RunStatus.COMPLETED.value, RunStatus.FAILED.value)
-                else None)(_snapshot(r, run_id)), 240)
+            def _terminal():
+                s = _snapshot(r, run_id)
+                if s and s["status"] in (RunStatus.COMPLETED.value,
+                                         RunStatus.FAILED.value):
+                    return s
+                return None
+            final = _wait_for(_terminal, 240)
         finally:
             worker2.terminate()
             worker2.wait(timeout=15)
