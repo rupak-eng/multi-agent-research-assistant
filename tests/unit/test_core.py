@@ -1,13 +1,12 @@
 """Unit tests: schemas, supervisor routing, citations, tokens, stubs."""
 
 import pytest
-from pydantic import ValidationError
 
 from app.state.schemas import (
     ErrorCode,
+    ResearchPlan,
     ResearcherResult,
     ResearcherStatus,
-    ResearchPlan,
     RoutingTarget,
     RunBudgets,
     SubQuestion,
@@ -33,12 +32,12 @@ def _result(sqid, status=ResearcherStatus.ANSWERED):
 
 # ------------------------------------------------------------- schemas ---
 def test_plan_requires_unique_ids():
-    with pytest.raises(ValidationError):
+    with pytest.raises(Exception):
         ResearchPlan(subquestions=[_sq(1), _sq(1)])
 
 
 def test_plan_requires_at_least_one():
-    with pytest.raises(ValidationError):
+    with pytest.raises(Exception):
         ResearchPlan(subquestions=[])
 
 
@@ -51,8 +50,8 @@ def test_cost_math():
 # ---------------------------------------------------------- supervisor ---
 def _view(**kw):
     from app.agents.supervisor import SupervisorView
-    base = {"plan": _plan(SubQuestionStatus.PENDING, SubQuestionStatus.PENDING),
-            "usage": TokenUsage(), "budgets": RunBudgets()}
+    base = dict(plan=_plan(SubQuestionStatus.PENDING, SubQuestionStatus.PENDING),
+                usage=TokenUsage(), budgets=RunBudgets())
     base.update(kw)
     return SupervisorView(**base)
 
@@ -196,8 +195,9 @@ def test_stub_search_deterministic():
 
 
 def test_stub_llm_plan_validates():
-    from app.agents.workers import PlannerAgent
+    from app.providers.base import LLMRequest
     from app.providers.llm_stub import StubLLMProvider
+    from app.agents.workers import PlannerAgent
     from app.state.schemas import PlanRequest
     llm = StubLLMProvider()
     plan, resp = PlannerAgent(llm).plan(

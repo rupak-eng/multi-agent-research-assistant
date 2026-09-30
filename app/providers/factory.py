@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from ..config import Settings
 from .base import LLMProvider, SearchProvider
-from .llm_groq import GroqLLMProvider
 from .llm_openai import OpenAICompatLLMProvider
 from .llm_stub import StubLLMProvider
 from .search_stub import StubSearchProvider
@@ -12,10 +11,6 @@ from .search_tavily import TavilySearchProvider
 
 
 def build_llm(settings: Settings) -> LLMProvider:
-    if settings.llm_provider == "groq":
-        # Production path: Groq via Secure Vault surrogate or GROQ_API_KEY.
-        return GroqLLMProvider(model=settings.groq_model,
-                              min_interval_sec=settings.groq_min_interval_sec)
     if settings.llm_provider == "openai_compat":
         return OpenAICompatLLMProvider(
             base_url=settings.llm_base_url,

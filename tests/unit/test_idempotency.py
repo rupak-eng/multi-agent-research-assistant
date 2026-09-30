@@ -1,6 +1,7 @@
 """Node idempotency: re-running a node with identical inputs performs no
 duplicate side effects and returns the same result."""
 
+import json
 
 from app.config import Settings
 from app.graph.nodes import make_deps, research_node
@@ -35,7 +36,7 @@ def _state_with_active_sq(run_id="run_idem1"):
 
 
 def test_research_node_idempotent(tmp_path):
-    deps, _registry, search = _deps(tmp_path)
+    deps, registry, search = _deps(tmp_path)
     state = _state_with_active_sq()
 
     out1 = research_node(state, deps)
@@ -54,7 +55,7 @@ def test_research_node_idempotent(tmp_path):
 
 
 def test_research_node_cached_trace_flag(tmp_path):
-    deps, _registry, _search = _deps(tmp_path)
+    deps, registry, search = _deps(tmp_path)
     state = _state_with_active_sq()
     research_node(state, deps)
     out2 = research_node(state, deps)

@@ -2,31 +2,24 @@
 
 from __future__ import annotations
 
-from urllib.parse import urlparse
-
-from ..providers.base import (
-    LLMProvider,
-    LLMRequest,
-    LLMResponse,
-    SearchProvider,
-    SearchProviderError,
-)
+from ..providers.base import LLMProvider, LLMRequest, LLMResponse, SearchProvider, SearchProviderError
 from ..providers.tokens import TokenCounter
 from ..state.schemas import (
     ErrorCode,
     Finding,
     PlanRequest,
-    ResearcherResult,
-    ResearcherStatus,
     ResearchPlan,
     ResearchReport,
     ResearchRequest,
+    ResearcherResult,
+    ResearcherStatus,
     RunError,
     SubQuestion,
     SynthesisOutput,
     WriteRequest,
     utcnow,
 )
+from urllib.parse import urlparse
 
 
 # ---------------------------------------------------------------- planner ---
@@ -122,15 +115,7 @@ class ResearcherAgent:
                     snippet=h.snippet, fetched_at=utcnow(),
                 ))
 
-        findings_json = "[" + ",".join(
-            # Cap per-finding snippet length: raw Tavily snippets can be very
-            # long, and stuffing them all into the prompt can exceed the
-            # provider's per-request TPM budget (Groq 413). Truncation is
-            # applied only to the LLM context copy, never to the stored
-            # Finding (citations keep the full snippet).
-            f.model_copy(update={"snippet": f.snippet[:400]}).model_dump_json()
-            for f in findings
-        ) + "]"
+        findings_json = "[" + ",".join(f.model_dump_json() for f in findings) + "]"
         resp = self.llm.complete(
             LLMRequest(
                 system=self.SYSTEM,
@@ -144,7 +129,7 @@ class ResearcherAgent:
         )
         try:
             synth = SynthesisOutput.model_validate_json(resp.text)
-        except Exception:  # noqa: BLE001 - stub fallback must never crash
+        except Exception:
             synth = SynthesisOutput(
                 summary=f"Collected {len(findings)} findings.",
                 status=ResearcherStatus.ANSWERED if findings else ResearcherStatus.INSUFFICIENT,

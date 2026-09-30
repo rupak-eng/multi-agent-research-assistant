@@ -5,7 +5,6 @@ from __future__ import annotations
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, START, StateGraph
 
-from ..state.schemas import RoutingTarget
 from .nodes import (
     NodeDeps,
     plan_node,
@@ -15,6 +14,7 @@ from .nodes import (
     write_node,
 )
 from .state import GraphState
+from ..state.schemas import RoutingTarget
 
 
 def build_graph(deps: NodeDeps,

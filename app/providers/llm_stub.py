@@ -65,7 +65,7 @@ class StubLLMProvider(LLMProvider):
 
     # -- planner ---------------------------------------------------------
     def _plan(self, user: str) -> dict:
-        m = re.search(r"QUESTION:\s*(.+)", user, re.DOTALL)
+        m = re.search(r"QUESTION:\s*(.+)", user, re.S)
         question = (m.group(1).strip() if m else user.strip()) or "the topic"
         m2 = re.search(r"MAX_SUBQUESTIONS:\s*(\d+)", user)
         n = int(m2.group(1)) if m2 else 3
@@ -79,7 +79,7 @@ class StubLLMProvider(LLMProvider):
 
     # -- researcher synthesis --------------------------------------------
     def _synthesize(self, user: str) -> dict:
-        m = re.search(r"FINDINGS_JSON:\s*(\[.*\])", user, re.DOTALL)
+        m = re.search(r"FINDINGS_JSON:\s*(\[.*\])", user, re.S)
         findings = json.loads(m.group(1)) if m else []
         m2 = re.search(r"SUBQUESTION_ID:\s*(\S+)", user)
         sqid = m2.group(1) if m2 else "sq?"
@@ -102,9 +102,9 @@ class StubLLMProvider(LLMProvider):
 
     # -- writer ------------------------------------------------------------
     def _write(self, user: str) -> dict:
-        m = re.search(r"FINDINGS_JSON:\s*(\[.*\])", user, re.DOTALL)
+        m = re.search(r"FINDINGS_JSON:\s*(\[.*\])", user, re.S)
         findings = json.loads(m.group(1)) if m else []
-        m2 = re.search(r"QUESTION:\s*(.+)", user, re.DOTALL)
+        m2 = re.search(r"QUESTION:\s*(.+)", user, re.S)
         question = (m2.group(1).strip().splitlines()[0] if m2 else "Research report")
         citations = [
             {
@@ -120,7 +120,7 @@ class StubLLMProvider(LLMProvider):
             by_sq.setdefault(f.get("subquestion_id", "?"), []).append(f)
         sections = []
         for idx, (sqid, fs) in enumerate(by_sq.items()):
-            _n0 = findings.index(fs[0]) + 1
+            n0 = findings.index(fs[0]) + 1
             body = " ".join(
                 f"{f.get('claim','')} [{findings.index(f)+1}]" for f in fs
             )

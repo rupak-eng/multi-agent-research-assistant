@@ -11,6 +11,7 @@ Each node:
 from __future__ import annotations
 
 import hashlib
+import json
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -26,10 +27,10 @@ from ..state.schemas import (
     ErrorCode,
     Finding,
     PlanRequest,
-    ResearcherResult,
     ResearchPlan,
     ResearchReport,
     ResearchRequest,
+    ResearcherResult,
     RoutingDecision,
     RoutingTarget,
     RunBudgets,
@@ -40,6 +41,7 @@ from ..state.schemas import (
     TokenUsage,
     TraceStep,
     WriteRequest,
+    utcnow,
 )
 from ..storage.registry import RunRegistry
 from .state import GraphState
@@ -237,19 +239,12 @@ def research_node(state: GraphState, deps: NodeDeps) -> dict:
     fp = _fingerprint(["research", sq.id, str(sq.attempts), refinement])
     if (cached := deps.registry.idem_get(f"{run_id}:research:{fp}")) is not None:
         res = ResearcherResult.model_validate_json(cached)
-        # Idempotent replay: never append a result or findings already present
-        # (e.g. supervisor re-dispatch after a validate retry, or a resumed
-        # stream that merged a snapshot into the checkpoint state).
-        have_result = any(r.subquestion_id == sq.id for r in results)
-        have_fids = {f.get("finding_id") for f in (state.get("findings") or [])}
-        fresh = [f for f in res.findings if f.finding_id not in have_fids]
-        upd = {"researcher_results": ([] if have_result
-                                      else [res.model_dump(mode="json")]),
-               "findings": [f.model_dump(mode="json") for f in fresh],
+        upd = {"researcher_results": [res.model_dump(mode="json")],
+               "findings": [f.model_dump(mode="json") for f in res.findings],
                "active_subquestion": None}
         upd.update(_trace(state, deps, node="research", agent="researcher",
                           input_summary=sq.question,
-                          output_summary=f"{len(fresh)} new findings (cached)",
+                          output_summary=f"{len(res.findings)} findings (cached)",
                           tools=["search", "llm.complete"], cached=True))
         return upd
 
