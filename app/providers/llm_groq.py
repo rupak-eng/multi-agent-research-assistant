@@ -29,6 +29,14 @@ from .tokens import TokenCounter
 BROWSER_UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
               "(KHTML, like Gecko) Chrome/120.0 Safari/537.36")
 
+# Per-model output-token ceilings enforced by Groq's OTPM limits.
+# qwen/qwen3.8-27b: 1000 output tokens/min on the dev tier, and Groq
+# rejects the request when Used + max_tokens would exceed the limit,
+# so request strictly below the ceiling (900) to leave headroom.
+MODEL_MAX_OUTPUT_TOKENS: dict[str, int] = {
+    "qwen/qwen3.8-27b": 900,
+}
+
 
 class LLMProviderError(RuntimeError):
     def __init__(self, message: str, *, retryable: bool = True):
@@ -111,7 +119,11 @@ class GroqLLMProvider(LLMProvider):
                 {"role": "user", "content": req.user},
             ],
             "temperature": req.temperature,
-            "max_tokens": req.max_tokens,
+            # Clamp to the model's OTPM ceiling (Groq rejects the request
+            # outright when max_tokens exceeds it).
+            "max_tokens": min(
+                req.max_tokens, MODEL_MAX_OUTPUT_TOKENS.get(self.model, req.max_tokens)
+            ),
         }
         if req.response_model is not None:
             payload["response_format"] = {"type": "json_object"}
