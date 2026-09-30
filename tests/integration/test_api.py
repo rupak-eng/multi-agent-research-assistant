@@ -4,7 +4,7 @@ import fakeredis.aioredis
 import pytest
 from fastapi.testclient import TestClient
 
-import app.api.routes as routes
+from app.api import routes
 from app.main import app
 
 

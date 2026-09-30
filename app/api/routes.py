@@ -36,7 +36,7 @@ def _settings() -> Settings:
 @router.post("/research", response_model=ResearchCreateResponse,
              status_code=202)
 async def create_research(req: ResearchCreateRequest,
-                          settings: Settings = Depends(_settings)):
+                          settings: Settings = Depends(_settings)):  # noqa: B008 - FastAPI DI
     """Enqueue a research run. Returns immediately with a run_id."""
     client = get_redis_client(settings)
     if not await redis_ping(client):
@@ -58,7 +58,7 @@ async def create_research(req: ResearchCreateRequest,
 
 
 @router.get("/research/{run_id}", response_model=ResearchStatusResponse)
-async def get_research(run_id: str, settings: Settings = Depends(_settings)):
+async def get_research(run_id: str, settings: Settings = Depends(_settings)):  # noqa: B008 - FastAPI DI
     client = get_redis_client(settings)
     raw = await client.get(run_key(run_id))
     if raw is None:
@@ -67,7 +67,7 @@ async def get_research(run_id: str, settings: Settings = Depends(_settings)):
 
 
 @router.get("/research/{run_id}/trace", response_model=TraceResponse)
-async def get_trace(run_id: str, settings: Settings = Depends(_settings)):
+async def get_trace(run_id: str, settings: Settings = Depends(_settings)):  # noqa: B008 - FastAPI DI
     client = get_redis_client(settings)
     if await client.get(run_key(run_id)) is None:
         raise HTTPException(status_code=404, detail="unknown run_id")
@@ -86,7 +86,7 @@ async def health():
 
 
 @router.get("/ready")
-async def ready(settings: Settings = Depends(_settings)):
+async def ready(settings: Settings = Depends(_settings)):  # noqa: B008 - FastAPI DI
     client = get_redis_client(settings)
     ok = await redis_ping(client)
     body = {"ready": bool(ok),
