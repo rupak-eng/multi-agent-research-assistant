@@ -39,7 +39,7 @@ def resolve_credential(connector: str, env_var: str) -> str | None:
         entry = dynamic_credential_entry(connector)
         s = str(entry.get("surrogate", "")).strip()
         return s or None
-    except Exception:
+    except Exception:  # noqa: BLE001 - vault unavailable => provider unavailable
         return None
 
 
