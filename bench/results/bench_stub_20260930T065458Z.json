@@ -1,0 +1,80 @@
+{
+  "label": "Deterministic/Stub",
+  "provider": {
+    "llm": "stub",
+    "llm_model": "stub-llm-v1",
+    "search": "stub"
+  },
+  "dataset": {
+    "topics": [
+      "What are vector databases and how do they power RAG pipelines?",
+      "How does LangGraph handle state and checkpointing for AI agents?"
+    ],
+    "size": 2
+  },
+  "budgets": {
+    "max_tokens": 60000,
+    "max_searches": 9,
+    "max_subquestions": 3,
+    "max_revisions": 2,
+    "wall_clock_sec": 600
+  },
+  "started_utc": "2026-09-30T06:54:58.090688+00:00",
+  "finished_utc": "2026-09-30T06:54:58.204586+00:00",
+  "runs": [
+    {
+      "run_id": "run_a13e52c901f6",
+      "topic": "What are vector databases and how do they power RAG pipelines?",
+      "status": "COMPLETED",
+      "latency_sec": 0.05,
+      "tokens_in": 2841,
+      "tokens_out": 2430,
+      "searches": 6,
+      "findings": 9,
+      "routing_decisions": {
+        "research": 3,
+        "write": 1
+      },
+      "trace_steps": 10,
+      "citation_pass": true,
+      "error": null
+    },
+    {
+      "run_id": "run_adcc28486fe7",
+      "topic": "How does LangGraph handle state and checkpointing for AI agents?",
+      "status": "COMPLETED",
+      "latency_sec": 0.06,
+      "tokens_in": 2743,
+      "tokens_out": 2296,
+      "searches": 6,
+      "findings": 9,
+      "routing_decisions": {
+        "research": 3,
+        "write": 1
+      },
+      "trace_steps": 10,
+      "citation_pass": true,
+      "error": null
+    }
+  ],
+  "summary": {
+    "completed": 2,
+    "failed": 0,
+    "latency_sec_p50": 0.06,
+    "latency_sec_p95": 0.06,
+    "latency_sec_mean": 0.06,
+    "tokens_in_total": 5584,
+    "tokens_out_total": 4726,
+    "tokens_in_mean": 2792.0,
+    "tokens_out_mean": 2363.0,
+    "searches_total": 12,
+    "searches_per_run_mean": 6.0,
+    "routing_decisions": {
+      "research": 6,
+      "write": 2
+    },
+    "citation_pass_rate": 1.0,
+    "estimated_cost_usd": 0.0,
+    "cost_note": "stub providers: no real cost"
+  }
+}
