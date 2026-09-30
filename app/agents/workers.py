@@ -122,7 +122,15 @@ class ResearcherAgent:
                     snippet=h.snippet, fetched_at=utcnow(),
                 ))
 
-        findings_json = "[" + ",".join(f.model_dump_json() for f in findings) + "]"
+        findings_json = "[" + ",".join(
+            # Cap per-finding snippet length: raw Tavily snippets can be very
+            # long, and stuffing them all into the prompt can exceed the
+            # provider's per-request TPM budget (Groq 413). Truncation is
+            # applied only to the LLM context copy, never to the stored
+            # Finding (citations keep the full snippet).
+            f.model_copy(update={"snippet": f.snippet[:400]}).model_dump_json()
+            for f in findings
+        ) + "]"
         resp = self.llm.complete(
             LLMRequest(
                 system=self.SYSTEM,
