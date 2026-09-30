@@ -1,0 +1,16 @@
+fastapi==0.141.1
+uvicorn[standard]==0.37.0
+pydantic>=2.0
+pydantic-settings>=2.0
+langgraph>=0.2,<1
+redis>=5.0
+httpx>=0.27
+structlog>=24.0
+tenacity>=8.0
+pytest>=8.0
+pytest-asyncio>=0.23
+fakeredis>=2.20
+ruff>=0.8
+# tiktoken is optional: if importable we use it for token counts,
+# otherwise we fall back to a documented char-based estimator.
+# tiktoken>=0.7
