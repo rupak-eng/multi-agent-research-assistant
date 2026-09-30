@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import JSONResponse
 
 from ..api.deps import QUEUE, get_redis_client, redis_ping, run_key, trace_key
 from ..config import Settings, get_settings
@@ -88,7 +89,7 @@ async def health():
 async def ready(settings: Settings = Depends(_settings)):
     client = get_redis_client(settings)
     ok = await redis_ping(client)
-    return {"ready": ok,
+    body = {"ready": bool(ok),
             "llm_provider": settings.llm_provider,
-            "search_provider": settings.search_provider}, \
-        (200 if ok else 503)
+            "search_provider": settings.search_provider}
+    return JSONResponse(status_code=200 if ok else 503, content=body)
