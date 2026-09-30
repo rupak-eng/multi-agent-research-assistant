@@ -63,6 +63,13 @@ class SubQuestion(BaseModel):
     status: SubQuestionStatus = SubQuestionStatus.PENDING
     attempts: int = 0
 
+    @field_validator("id", mode="before")
+    @classmethod
+    def _coerce_id(cls, v):
+        # Small models sometimes emit integer ids (1, 2, 3). Coerce instead
+        # of failing the whole run; planner re-numbers ids anyway.
+        return v if isinstance(v, str) else str(v)
+
     @field_validator("status", mode="before")
     @classmethod
     def _normalize_status(cls, v):
