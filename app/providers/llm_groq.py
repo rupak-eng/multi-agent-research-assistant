@@ -46,13 +46,18 @@ class GroqLLMProvider(LLMProvider):
 
     def __init__(self, api_key: str | None = None,
                  model: str = "openai/gpt-oss-20b",
-                 timeout: float = 120.0):
+                 timeout: float = 120.0,
+                 min_interval_sec: float = 0.0):
         # May be an hsurr: surrogate — opaque here, swapped at egress.
         self._key = api_key or require_credential(
             "custom.groq", "GROQ_API_KEY", "Groq LLM provider")
         self.model = model
         self.timeout = timeout
         self.counter = TokenCounter()
+        # Pacing between calls (seconds). Set >0 to stay under TPM limits
+        # when the key is shared or the tier is low.
+        self.min_interval_sec = min_interval_sec
+        self._last_call_ts = 0.0
 
     def _headers(self) -> dict:
         return {
@@ -93,6 +98,12 @@ class GroqLLMProvider(LLMProvider):
 
     def complete(self, req: LLMRequest) -> LLMResponse:
         start = time.monotonic()
+        # Pace calls to respect TPM limits on shared/low-tier keys.
+        if self.min_interval_sec > 0:
+            dt = time.monotonic() - self._last_call_ts
+            if dt < self.min_interval_sec:
+                time.sleep(self.min_interval_sec - dt)
+        self._last_call_ts = time.monotonic()
         payload: dict = {
             "model": self.model,
             "messages": [

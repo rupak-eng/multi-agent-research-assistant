@@ -1,0 +1,116 @@
+{
+  "label": "Real Provider: Groq openai/gpt-oss-20b + Tavily",
+  "provider": {
+    "llm": "groq",
+    "llm_model": "openai/gpt-oss-20b",
+    "search": "tavily"
+  },
+  "dataset": {
+    "topics": [
+      "What are vector databases and how do they power RAG pipelines?",
+      "How does LangGraph handle state and checkpointing for AI agents?",
+      "What are the trade-offs of hybrid search versus pure vector search?",
+      "How do AI agents use tools safely in production systems?",
+      "What is retrieval-augmented generation and how is it evaluated?"
+    ],
+    "size": 5
+  },
+  "budgets": {
+    "max_tokens": 60000,
+    "max_searches": 9,
+    "max_subquestions": 3,
+    "max_revisions": 2,
+    "wall_clock_sec": 600
+  },
+  "started_utc": "2026-09-30T06:55:04.629067+00:00",
+  "finished_utc": "2026-09-30T06:55:08.009807+00:00",
+  "runs": [
+    {
+      "run_id": null,
+      "topic": "What are vector databases and how do they power RAG pipelines?",
+      "status": "ERROR",
+      "latency_sec": 0.0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "searches": 0,
+      "findings": 0,
+      "routing_decisions": {},
+      "trace_steps": 0,
+      "citation_pass": false,
+      "error": "groq returned invalid JSON for ResearchPlan: 3 validation errors for ResearchPlan\nsubquestions.0.status\n  Input should be 'pending', 'in_progress', 'answered', 'insufficient' or 'failed' [type=enum, input_value='unanswered', input_type=str]\n    For further information visit https://errors.pydantic.d"
+    },
+    {
+      "run_id": null,
+      "topic": "How does LangGraph handle state and checkpointing for AI agents?",
+      "status": "ERROR",
+      "latency_sec": 0.0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "searches": 0,
+      "findings": 0,
+      "routing_decisions": {},
+      "trace_steps": 0,
+      "citation_pass": false,
+      "error": "groq HTTP 429: {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01kmhrvjpdfy0818kgdzbyxmqe` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 7040, Requested 1468. Please try again in 3.81s. Need more tokens? Upgrade to Dev Tier today at"
+    },
+    {
+      "run_id": null,
+      "topic": "What are the trade-offs of hybrid search versus pure vector search?",
+      "status": "ERROR",
+      "latency_sec": 0.0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "searches": 0,
+      "findings": 0,
+      "routing_decisions": {},
+      "trace_steps": 0,
+      "citation_pass": false,
+      "error": "groq HTTP 429: {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01kmhrvjpdfy0818kgdzbyxmqe` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 6988, Requested 1803. Please try again in 5.9325s. Need more tokens? Upgrade to Dev Tier today "
+    },
+    {
+      "run_id": null,
+      "topic": "How do AI agents use tools safely in production systems?",
+      "status": "ERROR",
+      "latency_sec": 0.0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "searches": 0,
+      "findings": 0,
+      "routing_decisions": {},
+      "trace_steps": 0,
+      "citation_pass": false,
+      "error": "groq returned invalid JSON for ResearchPlan: 3 validation errors for ResearchPlan\nsubquestions.0.status\n  Input should be 'pending', 'in_progress', 'answered', 'insufficient' or 'failed' [type=enum, input_value='unstarted', input_type=str]\n    For further information visit https://errors.pydantic.de"
+    },
+    {
+      "run_id": null,
+      "topic": "What is retrieval-augmented generation and how is it evaluated?",
+      "status": "ERROR",
+      "latency_sec": 0.0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "searches": 0,
+      "findings": 0,
+      "routing_decisions": {},
+      "trace_steps": 0,
+      "citation_pass": false,
+      "error": "groq HTTP 429: {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01kmhrvjpdfy0818kgdzbyxmqe` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 7607, Requested 1996. Please try again in 12.0225s. Need more tokens? Upgrade to Dev Tier today"
+    }
+  ],
+  "summary": {
+    "completed": 0,
+    "failed": 5,
+    "latency_sec_p50": 0.0,
+    "latency_sec_p95": 0.0,
+    "latency_sec_mean": 0.0,
+    "tokens_in_total": 0,
+    "tokens_out_total": 0,
+    "tokens_in_mean": 0.0,
+    "tokens_out_mean": 0.0,
+    "searches_total": 0,
+    "searches_per_run_mean": 0.0,
+    "routing_decisions": {},
+    "citation_pass_rate": 0.0,
+    "estimated_cost_usd": 0.0,
+    "cost_note": "Groq openai/gpt-oss-20b published pricing ($0.075/1M in, $0.3/1M out); Tavily usage-credit cost not included"
+  }
+}
