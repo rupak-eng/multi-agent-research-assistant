@@ -2,31 +2,24 @@
 
 from __future__ import annotations
 
-from urllib.parse import urlparse
-
-from ..providers.base import (
-    LLMProvider,
-    LLMRequest,
-    LLMResponse,
-    SearchProvider,
-    SearchProviderError,
-)
+from ..providers.base import LLMProvider, LLMRequest, LLMResponse, SearchProvider, SearchProviderError
 from ..providers.tokens import TokenCounter
 from ..state.schemas import (
     ErrorCode,
     Finding,
     PlanRequest,
-    ResearcherResult,
-    ResearcherStatus,
     ResearchPlan,
     ResearchReport,
     ResearchRequest,
+    ResearcherResult,
+    ResearcherStatus,
     RunError,
     SubQuestion,
     SynthesisOutput,
     WriteRequest,
     utcnow,
 )
+from urllib.parse import urlparse
 
 
 # ---------------------------------------------------------------- planner ---
@@ -136,7 +129,7 @@ class ResearcherAgent:
         )
         try:
             synth = SynthesisOutput.model_validate_json(resp.text)
-        except Exception:  # noqa: BLE001 - stub fallback must never crash
+        except Exception:
             synth = SynthesisOutput(
                 summary=f"Collected {len(findings)} findings.",
                 status=ResearcherStatus.ANSWERED if findings else ResearcherStatus.INSUFFICIENT,

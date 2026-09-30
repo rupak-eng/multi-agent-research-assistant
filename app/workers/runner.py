@@ -63,35 +63,34 @@ def _drive_guarded(graph, registry: RedisRunRegistry, run_id: str,
 
 def main() -> None:
     settings = get_settings()
-    graph, _deps, registry = build_worker_graph(settings)
+    graph, deps, registry = build_worker_graph(settings)
     assert isinstance(registry, RedisRunRegistry)
     backstop = settings.wall_clock_timeout_sec + 300
 
     # --- crash recovery: resume runs orphaned by a dead worker ------------
-    # reclaim_orphans removes them from `processing` (no re-queue); we drive
-    # each directly from its LangGraph checkpoint, so completed nodes are not
-    # re-executed and the run can never be picked up twice.
     orphans = registry.reclaim_orphans()
     for run_id in orphans:
         log.info("resuming orphaned run", run_id=run_id)
         try:
             _drive_guarded(graph, registry, run_id, None, backstop)
-        except Exception:  # noqa: BLE001 - worker must survive any run failure
-            log.error("run failed", run_id=run_id, error=traceback.format_exc())
+        except Exception:
+            log.error("orphan resume failed", run_id=run_id,
+                      error=traceback.format_exc())
             _mark_failed(registry, run_id, "resume after worker crash failed")
+        finally:
+            registry.ack(run_id)
     # snapshots stuck in RUNNING that never made it to the processing queue
     for run_id in registry.running_run_ids():
         log.info("resuming stuck RUNNING run", run_id=run_id)
         try:
             _drive_guarded(graph, registry, run_id, None, backstop)
-        except Exception:  # noqa: BLE001 - worker must survive any run failure
+        except Exception:
             _mark_failed(registry, run_id, "resume of stuck run failed")
 
     log.info("worker started, waiting for runs")
     while True:
         run_id = registry.claim(timeout=5)
         if run_id is None:
-            time.sleep(1)  # avoid hot-spin when Redis is unreachable
             continue
         log.info("claimed run", run_id=run_id)
         try:
@@ -100,21 +99,15 @@ def main() -> None:
                 log.error("no snapshot for claimed run", run_id=run_id)
                 continue
             snap = json.loads(raw)
-            status = snap.get("status")
-            if status == RunStatus.RUNNING.value:
-                # worker died mid-run (or orphan path): resume from checkpoint
+            if snap.get("status") == RunStatus.RUNNING.value:
                 _drive_guarded(graph, registry, run_id, None, backstop)
-            elif status == RunStatus.QUEUED.value:
+            else:
                 snap["status"] = RunStatus.RUNNING.value
                 registry.save_snapshot(run_id, json.dumps(snap))
                 _drive_guarded(graph, registry, run_id, snap, backstop)
-            else:
-                # terminal (COMPLETED/FAILED): never re-drive; just ack it.
-                log.warning("claimed terminal run, skipping re-drive",
-                            run_id=run_id, status=status)
             log.info("run finished", run_id=run_id,
                      status=json.loads(registry.get_snapshot(run_id) or "{}").get("status"))
-        except Exception:  # noqa: BLE001 - worker must survive any run failure
+        except Exception:
             log.error("run failed", run_id=run_id, error=traceback.format_exc())
             _mark_failed(registry, run_id, "worker exception")
         finally:

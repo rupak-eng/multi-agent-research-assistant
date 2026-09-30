@@ -8,9 +8,12 @@ venv/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
-# Benchmark raw results ARE committed (traceability for README numbers).
-# Only ignore local scratch runs, not the canonical result files.
-bench/results/scratch_*.json
-eval/scratch_*.jsonl
+bench/results/*.json
+!bench/results/.gitkeep
+eval/*.jsonl
+!eval/.gitkeep
+demo/*.json
+demo/*.md
+!demo/.gitkeep
 *.log
 .DS_Store
