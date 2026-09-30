@@ -11,7 +11,6 @@ Each node:
 from __future__ import annotations
 
 import hashlib
-import json
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -27,10 +26,10 @@ from ..state.schemas import (
     ErrorCode,
     Finding,
     PlanRequest,
+    ResearcherResult,
     ResearchPlan,
     ResearchReport,
     ResearchRequest,
-    ResearcherResult,
     RoutingDecision,
     RoutingTarget,
     RunBudgets,
@@ -41,7 +40,6 @@ from ..state.schemas import (
     TokenUsage,
     TraceStep,
     WriteRequest,
-    utcnow,
 )
 from ..storage.registry import RunRegistry
 from .state import GraphState

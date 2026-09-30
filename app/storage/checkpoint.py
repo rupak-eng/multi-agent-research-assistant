@@ -11,8 +11,9 @@ from __future__ import annotations
 import os
 import threading
 import uuid
+from collections.abc import Iterator, Sequence
 from pathlib import Path
-from typing import Any, Iterator, Sequence
+from typing import Any
 
 from langgraph.checkpoint.base import (
     BaseCheckpointSaver,

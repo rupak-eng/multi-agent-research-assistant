@@ -17,7 +17,7 @@ class TokenCounter:
 
             self._enc = tiktoken.get_encoding("cl100k_base")
             self.method = "tiktoken"
-        except Exception:
+        except Exception:  # noqa: BLE001 - tiktoken optional
             self._enc = None
 
     def count(self, text: str) -> int:
