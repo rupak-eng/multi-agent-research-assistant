@@ -11,13 +11,18 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    # Providers: "stub" | "openai_compat" ; "stub" | "tavily"
-    llm_provider: str = Field(default="stub")
+    # Providers: "groq" (production) | "openai_compat" | "stub" ;
+    #            "tavily" (production) | "stub"
+    llm_provider: str = Field(default="groq")
     llm_base_url: str = Field(default="http://localhost:11434/v1")
     llm_api_key: str = Field(default="")
     llm_model: str = Field(default="qwen2.5:1.5b")
+    # Groq production settings. Key comes from GROQ_API_KEY (transient) or the
+    # custom.groq Secure Vault connector — never hardcoded, never in files.
+    groq_api_key: str = Field(default="")
+    groq_model: str = Field(default="openai/gpt-oss-20b")
 
-    search_provider: str = Field(default="stub")
+    search_provider: str = Field(default="tavily")
     tavily_api_key: str = Field(default="")
 
     redis_url: str = Field(default="redis://localhost:6379/0")
