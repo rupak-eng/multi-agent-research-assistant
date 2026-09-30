@@ -91,6 +91,7 @@ def main() -> None:
     while True:
         run_id = registry.claim(timeout=5)
         if run_id is None:
+            time.sleep(1)  # avoid hot-spin when Redis is unreachable
             continue
         log.info("claimed run", run_id=run_id)
         try:

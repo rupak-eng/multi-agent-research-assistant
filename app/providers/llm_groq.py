@@ -85,8 +85,8 @@ class GroqLLMProvider(LLMProvider):
                                    retryable=True) from e
 
     @retry(retry=_is_retryable,
-           stop=stop_after_attempt(3),
-           wait=wait_exponential(multiplier=1, min=1, max=10),
+           stop=stop_after_attempt(5),
+           wait=wait_exponential(multiplier=2, min=2, max=60),
            reraise=True)
     def _post_with_retry(self, payload: dict) -> dict:
         return self._post(payload)
