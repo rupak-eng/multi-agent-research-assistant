@@ -71,7 +71,10 @@ class RedisRunRegistry(RunRegistry):
     def claim(self, timeout: int = 5) -> str | None:
         # BRPOPLPUSH: atomically move to processing so a crashed worker's
         # items can be reclaimed on restart.
-        v = self.r.brpoplpush(self.QUEUE, self.PROCESSING, timeout=timeout)
+        try:
+            v = self.r.brpoplpush(self.QUEUE, self.PROCESSING, timeout=timeout)
+        except Exception:  # noqa: BLE001 - socket timeout => no work available
+            return None
         if v is None:
             return None
         return v.decode() if isinstance(v, bytes) else v
