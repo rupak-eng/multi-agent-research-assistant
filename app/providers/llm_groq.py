@@ -115,10 +115,25 @@ class GroqLLMProvider(LLMProvider):
         }
         if req.response_model is not None:
             payload["response_format"] = {"type": "json_object"}
-        data = self._post_with_retry(payload)
-        text = self._extract_text(data)
-        if req.response_model is not None:
-            self._validate_json(text, req.response_model)
+        # Structured output from small models is occasionally malformed
+        # (wrong enum value, int id instead of str, ...). Temperature > 0
+        # makes each attempt a fresh sample, so a bounded retry is the
+        # honest fix; validation still runs on every attempt.
+        attempts = 3 if req.response_model is not None else 1
+        last_err: LLMProviderError | None = None
+        text = ""
+        for _ in range(attempts):
+            data = self._post_with_retry(payload)
+            text = self._extract_text(data)
+            if req.response_model is None:
+                break
+            try:
+                self._validate_json(text, req.response_model)
+                break
+            except LLMProviderError as e:
+                last_err = e
+        else:
+            raise last_err  # type: ignore[misc]
         usage = data.get("usage") or {}
         tokens_in = usage.get("prompt_tokens") or self.counter.count_messages(
             req.system, req.user)
