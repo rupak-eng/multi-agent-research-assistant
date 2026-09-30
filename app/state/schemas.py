@@ -63,6 +63,33 @@ class SubQuestion(BaseModel):
     status: SubQuestionStatus = SubQuestionStatus.PENDING
     attempts: int = 0
 
+    @field_validator("status", mode="before")
+    @classmethod
+    def _normalize_status(cls, v):
+        # Real LLMs emit near-synonyms ("unanswered", "done", ...). Normalize
+        # to the closed enum instead of failing the whole run.
+        if isinstance(v, SubQuestionStatus):
+            return v
+        s = str(v).strip().lower().replace("-", "_").replace(" ", "_")
+        aliases = {
+            "unanswered": "pending", "unstarted": "pending",
+            "todo": "pending", "not_started": "pending", "queued": "pending",
+            "new": "pending",
+            "inprogress": "in_progress", "started": "in_progress",
+            "researching": "in_progress", "ongoing": "in_progress",
+            "done": "answered", "complete": "answered", "completed": "answered",
+            "finished": "answered", "resolved": "answered",
+            "partial": "insufficient", "thin": "insufficient",
+            "skipped": "failed", "error": "failed",
+        }
+        s = aliases.get(s, s)
+        try:
+            return SubQuestionStatus(s)
+        except ValueError:
+            # Unknown LLM variant: a fresh sub-question is pending by
+            # definition; never fail the run on a synonym we missed.
+            return SubQuestionStatus.PENDING
+
 
 class ResearchPlan(BaseModel):
     subquestions: list[SubQuestion] = Field(min_length=1, max_length=10)
