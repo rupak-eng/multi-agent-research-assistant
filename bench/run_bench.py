@@ -38,8 +38,12 @@ from app.storage.registry import RedisRunRegistry, new_run_id
 # Groq published pricing (USD per 1M tokens), openai/gpt-oss-20b.
 # Sources: console.groq.com/docs/models pricing page (via public mirrors,
 # 2026-09-30). Tavily is usage-credit based; reported as searches/run.
-GROQ_PRICE_IN_PER_1M = 0.075
-GROQ_PRICE_OUT_PER_1M = 0.30
+# Published Groq list prices (USD per 1M tokens). Third-party-sourced;
+# verify against Groq's pricing page before quoting externally.
+GROQ_PRICES = {
+    "openai/gpt-oss-20b": (0.075, 0.30),
+    "qwen/qwen3.8-27b": (0.80, 4.00),
+}
 
 TOPICS = [
     "What are vector databases and how do they power RAG pipelines?",
@@ -97,6 +101,8 @@ def run_once(graph, registry, topic: str, budgets: RunBudgets) -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--provider", choices=["stub", "real"], default="stub")
+    ap.add_argument("--model", default="openai/gpt-oss-20b",
+                    help="Groq model for --provider real")
     ap.add_argument("--topics", type=int, default=5,
                     help="number of fixed topics (max 5)")
     ap.add_argument("--redis-db", type=int, default=15)
@@ -110,7 +116,7 @@ def main() -> None:
         settings = Settings(llm_provider="stub", search_provider="stub",
                             redis_url=f"redis://localhost:6379/{args.redis_db}")
     else:
-        model = "openai/gpt-oss-20b"
+        model = args.model
         label = f"Real Provider: Groq {model} + Tavily"
         settings = Settings(llm_provider="groq", search_provider="tavily",
                             groq_model=model,
@@ -159,9 +165,10 @@ def main() -> None:
             routing_total[k] = routing_total.get(k, 0) + v
 
     if args.provider == "real":
-        cost = tin / 1e6 * GROQ_PRICE_IN_PER_1M + tout / 1e6 * GROQ_PRICE_OUT_PER_1M
-        cost_note = (f"Groq {settings.groq_model} published pricing "
-                     f"(${GROQ_PRICE_IN_PER_1M}/1M in, ${GROQ_PRICE_OUT_PER_1M}/1M out); "
+        price_in, price_out = GROQ_PRICES.get(model, (0.0, 0.0))
+        cost = tin / 1e6 * price_in + tout / 1e6 * price_out
+        cost_note = (f"Groq {model} published pricing "
+                     f"(${price_in}/1M in, ${price_out}/1M out, third-party sourced); "
                      f"Tavily usage-credit cost not included")
     else:
         cost, cost_note = 0.0, "stub providers: no real cost"

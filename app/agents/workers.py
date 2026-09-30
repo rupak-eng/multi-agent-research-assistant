@@ -177,8 +177,9 @@ class WriterAgent:
         "You write a cited research report from findings. Every factual claim in "
         "section bodies MUST carry a citation marker [n] referring to the "
         "citations list, where n is the 1-based index into the findings you were "
-        "given (finding f1 -> [1], f2 -> [2], ...). Respond with JSON matching "
-        "the ResearchReport schema."
+        "given (finding f1 -> [1], f2 -> [2], ...). Keep it concise: "
+        "summary 2 sentences, each section body 2-3 sentences. "
+        "Respond with JSON matching the ResearchReport schema."
     )
 
     def __init__(self, llm: LLMProvider):
