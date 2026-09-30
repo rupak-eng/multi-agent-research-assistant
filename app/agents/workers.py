@@ -2,31 +2,24 @@
 
 from __future__ import annotations
 
-from urllib.parse import urlparse
-
-from ..providers.base import (
-    LLMProvider,
-    LLMRequest,
-    LLMResponse,
-    SearchProvider,
-    SearchProviderError,
-)
+from ..providers.base import LLMProvider, LLMRequest, LLMResponse, SearchProvider, SearchProviderError
 from ..providers.tokens import TokenCounter
 from ..state.schemas import (
     ErrorCode,
     Finding,
     PlanRequest,
-    ResearcherResult,
-    ResearcherStatus,
     ResearchPlan,
     ResearchReport,
     ResearchRequest,
+    ResearcherResult,
+    ResearcherStatus,
     RunError,
     SubQuestion,
     SynthesisOutput,
     WriteRequest,
     utcnow,
 )
+from urllib.parse import urlparse
 
 
 # ---------------------------------------------------------------- planner ---
@@ -122,15 +115,7 @@ class ResearcherAgent:
                     snippet=h.snippet, fetched_at=utcnow(),
                 ))
 
-        findings_json = "[" + ",".join(
-            # Cap per-finding snippet length: raw Tavily snippets can be very
-            # long, and stuffing them all into the prompt can exceed the
-            # provider's per-request TPM budget (Groq 413). Truncation is
-            # applied only to the LLM context copy, never to the stored
-            # Finding (citations keep the full snippet).
-            f.model_copy(update={"snippet": f.snippet[:400]}).model_dump_json()
-            for f in findings
-        ) + "]"
+        findings_json = "[" + ",".join(f.model_dump_json() for f in findings) + "]"
         resp = self.llm.complete(
             LLMRequest(
                 system=self.SYSTEM,
@@ -144,7 +129,7 @@ class ResearcherAgent:
         )
         try:
             synth = SynthesisOutput.model_validate_json(resp.text)
-        except Exception:  # noqa: BLE001 - stub fallback must never crash
+        except Exception:
             synth = SynthesisOutput(
                 summary=f"Collected {len(findings)} findings.",
                 status=ResearcherStatus.ANSWERED if findings else ResearcherStatus.INSUFFICIENT,
@@ -177,20 +162,15 @@ class WriterAgent:
         "You write a cited research report from findings. Every factual claim in "
         "section bodies MUST carry a citation marker [n] referring to the "
         "citations list, where n is the 1-based index into the findings you were "
-        "given (finding f1 -> [1], f2 -> [2], ...). Keep it concise: "
-        "summary 2 sentences, each section body 2-3 sentences. "
-        "Respond with JSON matching the ResearchReport schema."
+        "given (finding f1 -> [1], f2 -> [2], ...). Respond with JSON matching "
+        "the ResearchReport schema."
     )
 
     def __init__(self, llm: LLMProvider):
         self.llm = llm
 
     def write(self, req: WriteRequest) -> tuple[ResearchReport, LLMResponse]:
-        # Same TPM-budget truncation as the researcher: context copy only.
-        findings_json = "[" + ",".join(
-            f.model_copy(update={"snippet": f.snippet[:400]}).model_dump_json()
-            for f in req.findings
-        ) + "]"
+        findings_json = "[" + ",".join(f.model_dump_json() for f in req.findings) + "]"
         user = f"QUESTION: {req.question}\nFINDINGS_JSON: {findings_json}"
         if req.validation_feedback:
             user += f"\nPREVIOUS_DRAFT_FEEDBACK: {req.validation_feedback}"

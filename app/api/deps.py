@@ -32,5 +32,5 @@ def get_redis_client(settings: Settings | None = None) -> aioredis.Redis:
 async def redis_ping(client: aioredis.Redis) -> bool:
     try:
         return bool(await client.ping())
-    except Exception:  # noqa: BLE001 - ping failure means not ready
+    except Exception:
         return False
