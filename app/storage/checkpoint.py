@@ -110,8 +110,13 @@ class RedisCheckpointer(_SerdeMixin, BaseCheckpointSaver):
         pipe.set(self._data(tid, ns, cid), self._dump(checkpoint))
         pipe.set(self._meta(tid, ns, cid), self._dump(metadata))
         pipe.set(self._idx(tid, ns), cid)
-        # drop pending writes for this checkpoint: they are now committed
-        for k in self.r.scan_iter(self._write_prefix(tid, ns, cid) + b"*"):
+        # Drop pending writes for this thread+ns. LangGraph may use a
+        # different checkpoint id for put_writes than for the committed
+        # checkpoint (e.g. after a killed superstep), so scope the cleanup
+        # to the thread, not just the committed cid. Orphaned writes are
+        # never read (get_tuple scopes by cid), this just reclaims space.
+        prefix = f"ckpt:w:{tid}:{ns}:".encode()
+        for k in self.r.scan_iter(prefix + b"*"):
             pipe.delete(k)
         pipe.execute()
         return {"configurable": {"thread_id": tid, "checkpoint_ns": ns,
