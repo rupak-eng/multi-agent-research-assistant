@@ -27,7 +27,7 @@ graph TD
 | Deterministic/Stub | 5/5 | 0.06 s | 0.08 s | 100% | $0.00 |
 | Real: Groq gpt-oss-20b + Tavily | 0/5 | blocked | blocked | blocked | — |
 
-> **Real-provider benchmark status (2026-09-30):** Blocked by Groq TPM rate limits (8000/min on the shared dev-tier key; another project's benchmark was consuming quota concurrently). Attempts recorded provider 429s honestly in `bench_real_*.json`. The harness (`bench/run_bench.py --provider real`), retry/backoff, and inter-call pacing are implemented and ready; re-run when quota is available.
+> **Real-provider benchmark status (2026-09-30 → 2026-10-01):** Blocked by Groq org-level TPM rate limits (8000/min on `openai/gpt-oss-20b`, org `org_01kmhrvjpdfy0818kgdzbyxmqe`; persistent background usage kept the window saturated even after the daily quota reset — a second full 5-topic attempt at 2026-10-01 00:31 UTC with 30 s inter-call pacing also recorded 0/5 with HTTP 429s). Attempts recorded provider 429s honestly in `bench_real_20260930T100606Z.json` and `bench_real_20261001T003104Z.json`. The harness (`bench/run_bench.py --provider real`), retry/backoff, and inter-call pacing are implemented and ready; re-run when quota is available.
 
 **Durability:** `kill -9` mid-run → fresh worker resumes from Redis checkpoint in 8.5 s, zero duplicated side-effects, run completes. (`tests/integration/test_kill_resume.py`)
 
@@ -73,7 +73,7 @@ LLM research assistants fail in production for boring reasons: duplicated tool c
 `bench/run_bench.py` runs fixed topics end-to-end and writes raw JSON to `bench/results/`.
 
 - **Deterministic/Stub** (`bench_stub_20260930T065500Z.json`): 5 topics, 5/5 completed, p50 0.06 s, p95 0.08 s, 6.0 searches/run, citation pass 100%, $0.00.
-- **Real Provider: Groq openai/gpt-oss-20b + Tavily**: blocked on 2026-09-30 by TPM rate limits (see above). Failed attempts with honest 429 errors are in `bench_real_*.json`.
+- **Real Provider: Groq openai/gpt-oss-20b + Tavily**: blocked 2026-09-30 and again after quota reset 2026-10-01 by org-level TPM rate limits (see above). Failed attempts with honest 429 errors are in `bench_real_20260930T100606Z.json` and `bench_real_20261001T003104Z.json`.
 - Cost math uses published Groq pricing ($0.075/1M input, $0.30/1M output tokens); Tavily is usage-credit based and reported as searches/run.
 
 ## Results

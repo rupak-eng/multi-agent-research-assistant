@@ -11,6 +11,7 @@ import json
 import os
 import signal
 import subprocess
+import sys
 import time
 
 import pytest
@@ -21,7 +22,7 @@ from app.state.schemas import RunBudgets, RunStatus
 from app.storage.registry import RedisRunRegistry, new_run_id
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-PY = os.path.join(REPO, ".venv", "bin", "python")
+PY = sys.executable  # the interpreter running pytest (CI has no .venv)
 TEST_DB = 15
 
 
